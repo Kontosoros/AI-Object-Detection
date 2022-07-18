@@ -6,18 +6,18 @@ import unicodedata
 import re
 import os
 import tensorflow as tf
-
+from sklearn.model_selection import train_test_split
 
 class DataPreparation:
-    def __init__(self, datapath, datafile, sentence_pairs, batch_size, testing_factor):
+    def __init__(self, datapath, datafile, sentence_pairs, batch_size):
         self.datapath = datapath
         self.datafile = datafile
         self.sentence_pairs = sentence_pairs
         self.batch_size = batch_size
-        self.testing_factor = testing_factor
         self.create_dataset()
         self.tokenize_dataset()
         self.partition_training_testing_datasets()
+       
 
     # This function "ascifies" the characters pertaining to a given sentence.
     def unicode_to_ascii(self, sentence):
@@ -95,7 +95,6 @@ class DataPreparation:
         english_data = english_tokenizer.texts_to_sequences(self.input_english_sentences)
         # padding = add zero in order to have same length
         self.input_data_english = tf.keras.preprocessing.sequence.pad_sequences(english_data, padding="post")
-        
         # Define the tokenizer for the French language and apply it on the sets
         # of input and target french sentences.
         french_tokenizer = tf.keras.preprocessing.text.Tokenizer(filters="", lower=False)
@@ -131,7 +130,7 @@ class DataPreparation:
         self.french_maxlen = self.target_data_french.shape[1]
         print("Maximum English sequence length: {:d}".format(self.english_maxlen))
         print("Maximum French sequence length: {:d}".format(self.french_maxlen))
-
+        print(self.target_data_french)
     # This function creates the Tensorflow-based training and testing subsets
     # of data. The test size will be equal to the 25% of the loaded pairs of
     # sentences.
@@ -157,10 +156,16 @@ class DataPreparation:
        [ 919,  479,    1, ...,    0,    0,    0],
        [ 919,  480,    1, ...,    0,    0,    0]]))
         '''
-        dataset = tf.data.Dataset.from_tensor_slices((self.input_data_english, self.input_data_french, self.target_data_french))
+        # BUFFER_SIZE = 1600
+        BATCH_SIZE = 64
+        input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(self.input_data_english,self.target_data_french, test_size=0.2)
+        train_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train))
+        self.train_dataset = train_dataset.batch(BATCH_SIZE, drop_remainder=True)
+        val_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_val, target_tensor_val))
+        self.val_dataset = val_dataset.batch(BATCH_SIZE, drop_remainder=True)
+        # print("Train : ",input_tensor_train[:80])
+        # print("Validation : ",input_tensor_val[:20])
+        # print("Train length - Train target: ",len(input_tensor_train[:80]),len(target_tensor_val[:80]))
+        # print("Validation length - Validation target: ",len(input_tensor_val[:20]),len(target_tensor_val[:20]))
         
-        dataset = dataset.shuffle(self.sentence_pairs)
-        test_size = self.sentence_pairs // self.testing_factor
-        self.test_dataset = dataset.take(test_size).batch(self.batch_size, drop_remainder=True)
-        self.train_dataset = dataset.skip(test_size).batch(self.batch_size, drop_remainder=True)
         
