@@ -1,37 +1,17 @@
-# This Pythob class provides fundamental computational funtionality for the
-# implementation of the encoder. In particular, the decoder has almost the same
-# structure as the encoder, except that there exists an additional dense layer
-# that converts the vector of size decoder_dim which is the output from the RNN
-# layer, into a vector that represents the probability distribution across the
-# the target vocabulary. Mind that the decoder returns outputs along all its
-# timesteps since the corresponding return_sequences parameter is set to True.
 
 from re import X
 import tensorflow as tf
 import tensorflow_addons as tfa
 
 
-# class Decoder(tf.keras.Model):
-#     def __init__(self, vocab_size, timesteps_num, embedding_dim, decoder_dim, **kwards):
-#         super(Decoder, self).__init__(**kwards)
-#         self.decoder_dim = decoder_dim
-#         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=timesteps_num)
-#         self.rnn = tf.keras.layers.GRU(decoder_dim, return_sequences=True, return_state=True)
-#         self.dense = tf.keras.layers.Dense(vocab_size)
-
-#     def call(self, x, state):
-#         x = self.embedding(x)
-#         x, state = self.rnn(x, state)
-#         x = self.dense(x)
-#         return x, state
-
-# vocab_size, embedding_dim, DECODER_DIM, batch_sz, attention_type='luong'
-'''class Decoder(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, DECODER_DIM, batch_sz, attention_type='luong'):
+class Decoder(tf.keras.Model):
+    def __init__(self, vocab_size, embedding_dim, DECODER_DIM, batch_sz,max_length_input,max_length_output, attention_type):
         super(Decoder, self).__init__()
         self.batch_sz = batch_sz
         self.dec_units = DECODER_DIM
         self.attention_type = attention_type
+        self.max_length_input = max_length_input
+        self.max_length_output = max_length_output
 
         # Embedding Layer
         self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
@@ -46,7 +26,7 @@ import tensorflow_addons as tfa
         self.sampler = tfa.seq2seq.sampler.TrainingSampler()
 
         # Create attention mechanism with memory = None
-        self.attention_mechanism = self.build_attention_mechanism(self.dec_units, None, self.batch_sz * [max_length_input], self.attention_type)
+        self.attention_mechanism = self.build_attention_mechanism(self.dec_units, None, self.batch_sz * [max_length_input])
 
         # Wrap attention mechanism with the fundamental rnn cell of decoder
         self.rnn_cell = self.build_rnn_cell(batch_sz)
@@ -58,14 +38,14 @@ import tensorflow_addons as tfa
         rnn_cell = tfa.seq2seq.AttentionWrapper(self.decoder_rnn_cell, self.attention_mechanism, attention_layer_size=self.dec_units)
         return rnn_cell
 
-    def build_attention_mechanism(self, dec_units, memory, memory_sequence_length, attention_type="luong"):
+    def build_attention_mechanism(self, dec_units, memory, memory_sequence_length):
         # ------------- #
         # typ: Which sort of attention (Bahdanau, Luong)
         # dec_units: final dimension of attention outputs
         # memory: encoder hidden states of shape (batch_size, max_length_input, enc_units)
         # memory_sequence_length: 1d array of shape (batch_size) with every element set to max_length_input (for masking purpose)
 
-        if attention_type == "bahdanau":
+        if self.attention_type == "bahdanau":
             return tfa.seq2seq.BahdanauAttention(units=dec_units, memory=memory, memory_sequence_length=memory_sequence_length)
         else:
             return tfa.seq2seq.LuongAttention(units=dec_units, memory=memory, memory_sequence_length=memory_sequence_length)
@@ -77,6 +57,5 @@ import tensorflow_addons as tfa
 
     def call(self, inputs, initial_state):
         x = self.embedding(inputs)
-        outputs, _, _ = self.decoder(x, initial_state=initial_state, sequence_length=self.batch_sz * [max_length_input - 1])
+        outputs, _, _ = self.decoder(x, initial_state=initial_state, sequence_length=self.batch_sz * [self.max_length_output - 1])
         return outputs
-'''
