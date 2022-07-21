@@ -98,6 +98,7 @@ class DataPreparation:
         # Define the tokenizer for the French language and apply it on the sets
         # of input and target french sentences.
         french_tokenizer = tf.keras.preprocessing.text.Tokenizer(filters="", lower=False)
+        self.french_tokenizer = french_tokenizer
         # input_french_sentences {'france word': 1, 'france word': 2, 'france word': 3, 'france word': 4, 'france word': 5, 'france word': 6}
         french_tokenizer.fit_on_texts(self.input_french_sentences)
         # target_french_sentences {'france word': 1, 'france word': 2, 'france word': 3, 'france word': 4, 'france word': 5, 'france word': 6}
@@ -115,6 +116,8 @@ class DataPreparation:
             [ 173    1    3 ...    0    0    0] 
             [ 322    6    3 ...    0    0    0] ....]'''
         self.target_data_french = tf.keras.preprocessing.sequence.pad_sequences(french_data_out, padding="post")
+        self.english_tokenizer_word_index = english_tokenizer.word_index
+        self.french_tokenizer_word_index = french_tokenizer.word_index
         self.english_vocabulary_size = len(english_tokenizer.word_index)
         self.french_vocabulary_size = len(french_tokenizer.word_index)
         # {'.': 1, 'i': 2, 'it': 3, 'you': 4, '?': 5, 'tom': 6, 's': 7,......}
@@ -130,7 +133,7 @@ class DataPreparation:
         self.french_maxlen = self.target_data_french.shape[1]
         print("Maximum English sequence length: {:d}".format(self.english_maxlen))
         print("Maximum French sequence length: {:d}".format(self.french_maxlen))
-        print(self.target_data_french)
+        print(self.input_english_sentences)
     # This function creates the Tensorflow-based training and testing subsets
     # of data. The test size will be equal to the 25% of the loaded pairs of
     # sentences.
@@ -160,9 +163,12 @@ class DataPreparation:
         BATCH_SIZE = 64
         input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(self.input_data_english,self.target_data_french, test_size=0.2)
         train_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train))
+        print("TRAINING EXAMPLES",self.input_data_english)
         self.train_dataset = train_dataset.batch(BATCH_SIZE, drop_remainder=True)
-        val_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_val, target_tensor_val))
-        self.val_dataset = val_dataset.batch(BATCH_SIZE, drop_remainder=True)
+        self.input_tensor_val = input_tensor_val
+        self.target_tensor_val = target_tensor_val
+        # val_data = tf.data.Dataset.from_tensor_slices((input_tensor_val, target_tensor_val))
+        # self.val_dataset = val_data.batch(BATCH_SIZE)
         # print("Train : ",input_tensor_train[:80])
         # print("Validation : ",input_tensor_val[:20])
         # print("Train length - Train target: ",len(input_tensor_train[:80]),len(target_tensor_val[:80]))
