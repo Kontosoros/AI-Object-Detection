@@ -48,8 +48,9 @@ example_input_batch.shape, example_target_batch.shape
 max_length_input = example_input_batch.shape[1]
 max_length_output = example_target_batch.shape[1]
 vocab_inp_size = data_preparation.english_vocabulary_size + 1
+print("input vocab :",vocab_inp_size)
 vocab_tar_size = data_preparation.french_vocabulary_size + 1
-
+print("tar vocab :",vocab_tar_size)
 encoder = Encoder(vocab_inp_size, EMBEDDING_DIM, ENCODER_DIM, BATCH_SIZE)
 decoder = Decoder(vocab_tar_size, EMBEDDING_DIM, DECODER_DIM, BATCH_SIZE, max_length_input, max_length_output, attention_type="luong")
 
