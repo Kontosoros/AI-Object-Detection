@@ -59,6 +59,7 @@ class DataPreparation:
         local_file = os.path.join(self.datapath, self.datafile)
         with open(local_file, "r", encoding="utf-8") as fin:
             for i, line in enumerate(fin):
+                print(i)
                 en_sent, fr_sent, _ = line.strip().split("\t")
                 en_sent = [w for w in self.preprocess_sentence(en_sent).split()]
                 fr_sent = self.preprocess_sentence(fr_sent)
@@ -119,7 +120,7 @@ class DataPreparation:
         self.target_data_french = tf.keras.preprocessing.sequence.pad_sequences(french_data_out, padding="post")
         self.english_tokenizer_word_index = english_tokenizer.word_index
         self.french_tokenizer_word_index = french_tokenizer.word_index
-        
+        print(self.french_tokenizer_word_index)
         self.english_vocabulary_size = len(english_tokenizer.word_index)
         self.french_vocabulary_size = len(french_tokenizer.word_index)
         # {'.': 1, 'i': 2, 'it': 3, 'you': 4, '?': 5, 'tom': 6, 's': 7,......}
@@ -164,7 +165,7 @@ class DataPreparation:
         # BUFFER_SIZE = 1600
         BATCH_SIZE = 64
         
-        input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(self.input_data_english,self.input_data_french, test_size=0.2)
+        input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(self.input_data_english,self.input_data_french, test_size=0.2, shuffle=True)
         train_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train))
         self.train_dataset = train_dataset.batch(BATCH_SIZE, drop_remainder=True)
         self.input_tensor_val = input_tensor_val
